@@ -1,5 +1,5 @@
-import { Result } from "./result";
-import { None } from "./success";
+import { Result } from './result';
+import { None } from './success';
 
 export type Failure<Code extends string = string, Payload = undefined> = {
   readonly code: Code;

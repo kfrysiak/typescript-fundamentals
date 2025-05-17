@@ -1,20 +1,41 @@
 {
-  "name": "typescript-fundamentals",
-  "version": "1.0.0",
+  "name": "@konfry/typescript-fundamentals",
+  "version": "1.0.1",
   "description": "Fundamental typescript types and concepts for a robust and easy to work system",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "lint:fix": "eslint --fix .",
     "lint": "eslint .",
     "test": "vitest"
   },
-  "keywords": ["typescript", "library", "result", "utility"],
+  "keywords": [
+    "typescript",
+    "library",
+    "result",
+    "utility"
+  ],
   "author": "Konrad Frysiak <konrad.frysiak@gmail.com>",
+  "exports": {
+    "./result": {
+      "types": "./dist/result.d.ts",
+      "import": "./dist/result.mjs",
+      "require": "./dist/result.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "result": [
+        "dist/result.d.ts"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",

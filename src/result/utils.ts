@@ -1,6 +1,6 @@
-import { failure, Failure } from "./failure";
-import { Result } from "./result";
-import { None, success } from "./success";
+import { failure, Failure } from './failure';
+import { Result } from './result';
+import { None, success } from './success';
 
 /**
  * Collapses an array of PromiseSettledResult or Result into a single Result, returning
@@ -19,7 +19,7 @@ export function collapseResults<
     PromiseResult extends Result<unknown, infer F>
       ? Exclude<F, undefined>
       : never;
-  const payloads:Failure[] = [];
+  const payloads: Failure[] = [];
   const values: SuccessValue[] = [];
   const unknownErrorBase = {
     code: 'unknown_error',
@@ -55,7 +55,6 @@ export function collapseResults<
   return success(values as Exclude<SuccessValue, None>[]);
 }
 
-
 export function findFailure<T, F>(results: Result<T, F>[]) {
   const found = results.find((result) => result[1] !== undefined);
   if (!found) {
@@ -63,4 +62,3 @@ export function findFailure<T, F>(results: Result<T, F>[]) {
   }
   return found[1];
 }
-
