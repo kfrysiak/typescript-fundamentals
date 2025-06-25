@@ -22,7 +22,7 @@ export const failure = <const Code extends string, Payload>(
       message: input.message,
       ...(input.payload !== undefined && { payload: input.payload }),
     },
-  ] as [
+  ] as unknown as readonly [
     None,
     typeof input extends FailureInput<infer Code, infer Payload>
       ? Failure<Code, Payload>
