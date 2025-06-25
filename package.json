@@ -1,6 +1,6 @@
 {
   "name": "@konfry/typescript-fundamentals",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "description": "Fundamental typescript types and concepts for a robust and easy to work system",
   "files": [
     "dist"

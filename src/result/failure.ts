@@ -44,3 +44,16 @@ export type FailureOf<
     : T extends Result<U, infer Failure>
       ? Exclude<Failure, typeof undefined>
       : never;
+
+export class ResultError extends Error {}
+/**
+ * Pass potential failure here to narrow down result to success, or throw. Not a
+ * recommended way of handling results
+ */
+export function assertNonFailure(
+  failureResult: unknown,
+): asserts failureResult is undefined {
+  if (typeof failureResult !== 'undefined') {
+    throw new ResultError('Asserted success but got a failure');
+  }
+}

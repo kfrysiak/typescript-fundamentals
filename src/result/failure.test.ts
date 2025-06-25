@@ -25,7 +25,6 @@ describe('FailureOf', () => {
 
     const withPayloadResult = withPayload();
     const [res, failureResult] = withPayloadResult;
-
     if (!failureResult) {
       throw new Error('Should not happen');
     }

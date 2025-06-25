@@ -3,7 +3,7 @@ import { Result } from './result';
 export const None = Symbol('None');
 export type None = typeof None;
 
-export const success = <T>(value?: T) => [value, undefined] as [T, undefined];
+export const success = <const T>(value?: T) => [value as T, undefined] as const;
 
 /**
  * Utility type that returns only success variant from a Result. You can pass a promise of
