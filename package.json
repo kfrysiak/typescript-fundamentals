@@ -2,6 +2,7 @@
   "name": "@konfry/typescript-fundamentals",
   "version": "1.0.9",
   "description": "Fundamental typescript types and concepts for a robust and easy to work system",
+  "index": "dist/result.js",
   "files": [
     "dist"
   ],

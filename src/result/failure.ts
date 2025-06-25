@@ -1,3 +1,4 @@
+import { ErrorWithPayload } from './error';
 import { Result } from './result';
 import { None } from './success';
 
@@ -51,9 +52,18 @@ export class ResultError extends Error {}
  * recommended way of handling results
  */
 export function assertNonFailure(
-  failureResult: undefined | Failure,
+  failureResult: undefined | Failure<string>,
 ): asserts failureResult is undefined {
   if (typeof failureResult !== 'undefined') {
-    throw new ResultError('Asserted success but got a failure');
+    if ('payload' in failureResult) {
+      throw new ErrorWithPayload(
+        `Asserted success but got a failure: '${failureResult.code}'`,
+        failureResult.payload,
+      );
+    } else {
+      throw new Error(
+        `Asserted success but got a failure: '${failureResult.code}'`,
+      );
+    }
   }
 }
