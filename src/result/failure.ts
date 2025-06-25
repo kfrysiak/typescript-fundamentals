@@ -11,8 +11,8 @@ type FailureInput<Code extends string, Payload> = {
   message: string;
   payload?: Payload;
 };
-export const failure = <const Input extends FailureInput<string, unknown>>(
-  input: Input,
+export const failure = <const Code extends string, const Payload>(
+  input: FailureInput<Code, Payload>,
 ) =>
   [
     undefined as unknown as None,
@@ -23,9 +23,9 @@ export const failure = <const Input extends FailureInput<string, unknown>>(
     },
   ] as [
     None,
-    Input extends FailureInput<infer Code, infer Payload>
+    typeof input extends FailureInput<infer Code, infer Payload>
       ? Failure<Code, Payload>
-      : Input extends Failure<infer FailureCode, infer FailurePayload>
+      : typeof input extends Failure<infer FailureCode, infer FailurePayload>
         ? Failure<FailureCode, FailurePayload>
         : 'Error', // Error
   ]; // If input is already a failure, return it as is
