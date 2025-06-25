@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, test } from 'vitest';
 import { success } from './success';
-import { Failure, failure, FailureOf } from './failure';
+import { assertNonFailure, Failure, failure, FailureOf } from './failure';
 
 type Exact<T, U, True = true, False = false> = T extends U
   ? U extends T
@@ -25,6 +25,7 @@ describe('FailureOf', () => {
 
     const withPayloadResult = withPayload();
     const [res, failureResult] = withPayloadResult;
+
     if (!failureResult) {
       throw new Error('Should not happen');
     }

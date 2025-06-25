@@ -51,7 +51,7 @@ export class ResultError extends Error {}
  * recommended way of handling results
  */
 export function assertNonFailure(
-  failureResult: unknown,
+  failureResult: undefined | Failure,
 ): asserts failureResult is undefined {
   if (typeof failureResult !== 'undefined') {
     throw new ResultError('Asserted success but got a failure');
