@@ -12,7 +12,7 @@ type FailureInput<Code extends string, Payload> = {
   message: string;
   payload?: Payload;
 };
-export const failure = <const Code extends string, const Payload>(
+export const failure = <const Code extends string, Payload>(
   input: FailureInput<Code, Payload>,
 ) =>
   [
@@ -52,7 +52,7 @@ export class ResultError extends Error {}
  * recommended way of handling results
  */
 export function assertNonFailure(
-  failureResult: undefined | Failure<string>,
+  failureResult: undefined | Failure<string> | Failure<string, unknown>,
 ): asserts failureResult is undefined {
   if (typeof failureResult !== 'undefined') {
     if ('payload' in failureResult) {

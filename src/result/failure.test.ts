@@ -17,7 +17,7 @@ describe('FailureOf', () => {
         const result = failure({
           code: 'something_wrong',
           message: 'Something went wrong',
-          payload: { id: 5 as number },
+          payload: { id: 5 },
         });
         return result;
       }
@@ -36,7 +36,7 @@ describe('FailureOf', () => {
       readonly code: 'something_wrong';
       readonly message: string;
       readonly payload: {
-        readonly id: number;
+        id: number;
       };
     };
     type ToTest = Prettify<typeof failureResult>;
