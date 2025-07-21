@@ -47,6 +47,18 @@ export type FailureOf<
       : never;
 
 export class ResultError extends Error {}
+
+/**
+ * Returns just failure of a result, throws otherwise. Use only in tests and
+ * throwaway scripts
+ **/
+export function failureOf<T extends Result<any, any>>(result: T) {
+  if (!result[1]) {
+    throw new Error('Trying to get failureOf a success');
+  }
+  return result[1] as FailureOf<T>;
+}
+
 /**
  * Pass potential failure here to narrow down result to success, or throw. Not a
  * recommended way of handling results

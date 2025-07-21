@@ -15,3 +15,14 @@ export type SuccessOf<T extends Result<U> | Promise<Result<U>>, U = unknown> =
     : T extends Result<infer Success>
       ? Exclude<Success, None>
       : never;
+
+/**
+ * Returns just success of a result, throws otherwise. Use only in tests and
+ * throwaway scripts
+ **/
+export function successOf<T extends Result<any, any>>(result: T) {
+  if (result[1]) {
+    throw new Error('Trying to get successOf a failure');
+  }
+  return result[0] as SuccessOf<T>;
+}
