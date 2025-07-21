@@ -1,6 +1,6 @@
 {
   "name": "@konfry/typescript-fundamentals",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Fundamental typescript types and concepts for a robust and easy to work system",
   "index": "dist/result.js",
   "files": [
@@ -30,6 +30,9 @@
       "types": "./dist/eslint-plugin.d.ts",
       "import": "./dist/eslint-plugin.mjs",
       "require": "./dist/eslint-plugin.js"
+    },
+    "./eslint-plugin.mjs": {
+      "import": "./dist/eslint-plugin.mjs"
     }
   },
   "typesVersions": {
