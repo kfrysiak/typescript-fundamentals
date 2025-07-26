@@ -7,26 +7,34 @@ export type Failure<Code extends string = string, Payload = undefined> = {
   readonly message: string;
 } & (Payload extends undefined ? unknown : { readonly payload: Payload });
 
-type FailureInput<Code extends string, Payload> = {
+type FailureInput<Code extends string = string, Payload = undefined> = {
   code: Code;
   message: string;
   payload?: Payload;
 };
-export const failure = <const Code extends string, Payload>(
-  input: FailureInput<Code, Payload>,
+export const failure = <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Input extends FailureInput | Failure<string, any>,
+>(
+  input: Input,
 ) =>
   [
     undefined as unknown as None,
     {
       code: input.code,
       message: input.message,
-      ...(input.payload !== undefined && { payload: input.payload }),
+      ...((input as FailureInput).payload !== undefined
+        ? { payload: (input as FailureInput).payload }
+        : {}),
     },
   ] as unknown as readonly [
     None,
-    typeof input extends FailureInput<infer Code, infer Payload>
-      ? Failure<Code, Payload>
-      : typeof input extends Failure<infer FailureCode, infer FailurePayload>
+    typeof input extends Failure
+      ? typeof input
+      : typeof input extends FailureInput<
+            infer FailureCode,
+            infer FailurePayload
+          >
         ? Failure<FailureCode, FailurePayload>
         : 'Error', // Error
   ]; // If input is already a failure, return it as is
