@@ -1,15 +1,8 @@
 import { describe, expect, expectTypeOf, test } from 'vitest';
 import { success } from './success';
-import { Failure, failure, FailureInput, FailureOf } from './failure';
+import { failure, FailureOf } from './failure';
 import { collapseResults } from './utils';
-
-type Exact<T, U, True = true, False = false> = T extends U
-  ? U extends T
-    ? True
-    : False
-  : False;
-
-type Prettify<T> = { [K in keyof T]: T[K] } & {};
+import { Prettify } from './typescript';
 
 describe('FailureOf', () => {
   async function mockWithoutPayload() {
@@ -112,7 +105,6 @@ describe('FailureOf', () => {
     if (!multipleFailures) {
       throw new Error('Should not happen');
     }
-
     const [, immediatelyPrefixed] = failure(
       {
         code: 'account_not_found',
@@ -147,8 +139,8 @@ describe('FailureOf', () => {
       });
     }
     // Verify lack of payload
-    prefixedMultipleFailures.code;
     if (prefixedMultipleFailures.code === 'vendor_without_payload_code') {
+      type Test = typeof prefixedMultipleFailures;
       expectTypeOf<typeof prefixedMultipleFailures>().not.toHaveProperty(
         'payload',
       );

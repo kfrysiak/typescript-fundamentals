@@ -2,27 +2,15 @@ import { expectTypeOf } from 'vitest';
 import { ErrorWithPayload } from './error';
 import { Result } from './result';
 import { None } from './success';
-import { Which } from './typescript';
+import { Prettify } from './typescript';
 
 export type Failure<
   Code extends string = string,
-  Payload = undefined,
-  Message = string,
+  Payload = any,
+  Message extends string = string,
 > = Payload extends undefined
-  ? {
-      readonly code: Code;
-      readonly message: Message;
-    }
-  : {
-      readonly code: Code;
-      readonly message: Message;
-      readonly payload: Payload;
-    };
-// export type Failure<Code extends string = string, Payload = undefined> = {
-//   readonly code: Code;
-//   readonly message: string;
-//   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-// } & (Payload extends undefined ? {} : { readonly payload: Payload });
+  ? FailureWithoutPayload<Code, Message>
+  : FailureWithPayload<Code, Message, Payload>;
 
 export type PrefixString<
   Input extends string,
@@ -33,9 +21,14 @@ export type PrefixFailure<
   Input extends Failure,
   PrefixType extends string | undefined = undefined,
 > = PrefixType extends string
-  ? Input extends Failure<infer Code, infer Payload, infer Message>
-    ? Failure<PrefixString<Code, PrefixType>, Payload, Message>
-    : 'not a failure'
+  ? Input extends FailureWithPayload<infer Code, infer Payload, infer Message>
+    ? FailureWithPayload<PrefixString<Code, PrefixType>, Payload, Message>
+    : Input extends FailureWithoutPayload<infer Code, infer Message>
+      ? Omit<
+          FailureWithoutPayload<PrefixString<Code, PrefixType>, Message>,
+          'payload'
+        >
+      : never
   : never;
 
 type FailureInput<Code extends string = string, Payload = undefined> = {
@@ -44,51 +37,25 @@ type FailureInput<Code extends string = string, Payload = undefined> = {
   payload?: Payload;
 };
 
-/**
- * Validate Failure vs FailureInput recognition
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const realFailure = failure({ code: 'test', message: 'Hello' });
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const failureInput = { code: 'test', message: 'Hello' };
-type RealFailure = FailureOf<typeof realFailure>;
-type FailureInputType = typeof failureInput;
-expectTypeOf<Which<RealFailure>>().toEqualTypeOf<'Failure'>();
-expectTypeOf<Which<FailureInputType>>().toEqualTypeOf<'FailureInput'>();
-type W1 = Which<RealFailure>; // "FailureInput"
-type W2 = Which<FailureInputType>; // "FailureInput"
-
 export function failure<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Input extends FailureInput | Failure<string, any>,
->(
-  input: Input,
-): readonly [
-  None,
-  Input extends Failure<infer Code, infer Payload>
-    ? Input
-    : typeof input extends FailureInput<infer FailureCode, infer FailurePayload>
-      ? Failure<FailureCode, FailurePayload>
-      : 'Error',
-];
+  const Input extends FailureWithoutPayload<string>,
+>(input: Input): readonly [None, Input];
 export function failure<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Input extends FailureInput | Failure<string, any>,
+  const Input extends FailureWithPayload<string>,
+>(input: Input): readonly [None, Input];
+export function failure<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Input extends Failure,
   const Prefix extends string,
 >(
   input: Input,
   prefix: Prefix,
-): readonly [
-  None,
-  Input extends Failure<infer Code, infer Payload>
-    ? PrefixFailure<Input, Prefix>
-    : typeof input extends FailureInput<infer FailureCode, infer FailurePayload>
-      ? Failure<PrefixString<FailureCode, Prefix>, FailurePayload>
-      : 'Error',
-];
+): readonly [None, Prettify<PrefixFailure<Input, Prefix>>];
 export function failure<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Input extends FailureInput | Failure<string, any>,
+  const Input extends FailureWithPayload | FailureWithoutPayload,
   const Prefix extends string | undefined,
 >(input: Input, prefix?: Prefix) {
   return [
@@ -101,7 +68,7 @@ export function failure<
         : {}),
     },
   ] as any;
-} // If input is already a failure, return it as is
+}
 
 /**
  * Utility type that returns only failure variant from a Result. You can pass a promise of
@@ -152,8 +119,6 @@ export function assertNonFailure(
   }
 }
 
-type testF = Failure<'hello'>;
-type testPayload = Failure<'hello', { id: 5 }>;
 /**
  * Use this type if you want to check if a given type is a Failure
  */
@@ -162,26 +127,16 @@ type FailureWithPayload<
   Message extends string = string,
   Payload = any,
 > = {
-  code: Code;
-  message: Message;
-  payload: Payload;
+  readonly code: Code;
+  readonly message: Message;
+  readonly payload: Payload;
 };
 
 type FailureWithoutPayload<
   Code extends string = string,
   Message extends string = string,
 > = {
-  code: Code;
-  message: Message;
+  readonly code: Code;
+  readonly message: Message;
+  payload?: never;
 };
-
-const [, testFailure] = failure({ code: 'hello', message: 'hey' });
-const [, testFailureWithP] = failure({
-  code: 'hello',
-  message: 'hey',
-  payload: { id: 5 },
-});
-type S = typeof testFailure;
-type T = S extends Failure ? PrefixFailure<S, 'vendor'> : 'false';
-type Text = PrefixString<'something', 'vendor'>;
-type Text2 = PrefixString<'something', string>;

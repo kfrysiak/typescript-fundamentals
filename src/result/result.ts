@@ -4,6 +4,6 @@ import { None } from './success';
 export type FailureResult<F = Failure<string, undefined>> = readonly [None, F];
 export type SuccessResult<T> = readonly [T, undefined];
 
-export type Result<T, F = Failure<string, undefined>> =
+export type Result<T, F = Failure<string>> =
   | readonly [T, undefined]
   | readonly [None, F];
