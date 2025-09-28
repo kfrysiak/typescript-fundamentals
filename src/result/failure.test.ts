@@ -1,6 +1,6 @@
-import { describe, expectTypeOf, test } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 import { success } from './success';
-import { failure, FailureOf } from './failure';
+import { Failure, failure, FailureInput, FailureOf } from './failure';
 import { collapseResults } from './utils';
 
 type Exact<T, U, True = true, False = false> = T extends U
@@ -12,57 +12,156 @@ type Exact<T, U, True = true, False = false> = T extends U
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 describe('FailureOf', () => {
+  async function mockWithoutPayload() {
+    if (true as any) {
+      const result = failure({
+        code: 'without_payload_code',
+        message: 'Without payload message',
+      });
+      return result;
+    }
+    return success(true);
+  }
+  async function mockWithPayload() {
+    if (true as any) {
+      const result = failure({
+        code: 'with_payload_code',
+        message: 'With payload message',
+        payload: { id: 5 },
+      });
+      return result;
+    }
+    return success('payload');
+  }
+
+  /**
+   * Actually returns a payload
+   */
+  async function mockMixed() {
+    if (<any>false) {
+      return mockWithoutPayload();
+    }
+    return mockWithPayload();
+  }
+
   test('returns valid failure from Result', async () => {
-    async function withoutPayload() {
-      if (true as any) {
-        const result = failure({
-          code: 'something_else_went_wrong',
-          message: 'Something else went wrong',
-        });
-        return result;
-      }
-      return success(true);
-    }
-    async function withPayload() {
-      if (true as any) {
-        const result = failure({
-          code: 'something_wrong',
-          message: 'Something went wrong',
-          payload: { id: 5 },
-        });
-        return result;
-      }
-      return success('payload');
-    }
+    /**
+     * Arrange
+     */
+    const withoutPayloadResult = await mockWithoutPayload();
+    const [, withoutPayload] = withoutPayloadResult;
+    const withPayloadResult = await mockWithPayload();
+    const [, withPayload] = withPayloadResult;
 
-    const withoutPayloadResult = await withoutPayload();
-    const withPayloadResult = await withPayload();
-    const [res, failureResult] = withPayloadResult;
-
-    if (!failureResult) {
+    if (!withPayload) {
       throw new Error('Should not happen');
     }
-    // expectTypeOf(failureResult).toExtend<Failure>()
+    if (!withoutPayload) {
+      throw new Error('Should not happen');
+    }
+    /**
+     * Act
+     */
+    const [, rewrappedWith] = failure(withPayload);
+    type TP = typeof withPayload;
 
+    const [, rewrappedWithout] = failure(withoutPayload);
+    type TW = typeof withoutPayload;
+    /**
+     * Assert
+     */
+    expectTypeOf<typeof withoutPayload>().not.toHaveProperty('payload');
+    expectTypeOf<typeof withPayload>().toExtend<{
+      payload: {
+        id: 5;
+      };
+    }>();
+
+    // Exact type match
     type Match = {
-      readonly code: 'something_wrong';
-      readonly message: string;
+      readonly code: 'with_payload_code';
+      readonly message: 'With payload message';
       readonly payload: {
-        id: number;
+        readonly id: 5;
       };
     };
-    const promises = [withoutPayload(), withPayload()];
+
+    type ToTest = Prettify<typeof withPayload>;
+    expectTypeOf<ToTest>().toEqualTypeOf<Match>();
+
+    // FailureOf works
+    type JustFailure = FailureOf<typeof withPayloadResult>;
+    expectTypeOf(withPayload).toEqualTypeOf<JustFailure>();
+  });
+  test('collapseResults - promises', async () => {
+    const promises = [mockWithoutPayload(), mockWithPayload()];
     const promiseResult = await Promise.allSettled(promises);
-    const [collapseSuccess, collapseError] = collapseResults(promiseResult);
+    const [, collapseError] = collapseResults(promiseResult);
     if (collapseError) {
       type ErrorCodes = (typeof collapseError)['payload'][number]['code'];
       expectTypeOf<ErrorCodes>().toEqualTypeOf<
-        'something_else_went_wrong' | 'unknown_error' | 'something_wrong'
+        'without_payload_code' | 'unknown_error' | 'with_payload_code'
       >();
     }
-    type ToTest = Prettify<typeof failureResult>;
-    expectTypeOf<ToTest>().toEqualTypeOf<Match>();
-    type JustFailure = FailureOf<typeof withPayloadResult>;
-    expectTypeOf(failureResult).toEqualTypeOf<JustFailure>();
+  });
+  test('prefix works', async () => {
+    /**
+     * Arrange
+     */
+    const [, multipleFailures] = await mockMixed();
+    if (!multipleFailures) {
+      throw new Error('Should not happen');
+    }
+
+    const [, immediatelyPrefixed] = failure(
+      {
+        code: 'account_not_found',
+        message: 'Vendor account not found',
+      },
+      'vendor',
+    );
+    /**
+     * Act
+     */
+    const [, prefixedMultipleFailures] = failure(multipleFailures, 'vendor');
+
+    /**
+     * Assert
+     */
+
+    // Verify code union
+    expectTypeOf<(typeof prefixedMultipleFailures)['code']>().toExtend<
+      'vendor_with_payload_code' | 'vendor_without_payload_code'
+    >();
+    expect(prefixedMultipleFailures.code).toEqual('vendor_with_payload_code');
+
+    // Verify payload
+    if (prefixedMultipleFailures.code === 'vendor_with_payload_code') {
+      expectTypeOf<typeof prefixedMultipleFailures>().toExtend<{
+        payload: {
+          id: 5;
+        };
+      }>();
+      expect(prefixedMultipleFailures.payload).toMatchObject({
+        id: 5,
+      });
+    }
+    // Verify lack of payload
+    prefixedMultipleFailures.code;
+    if (prefixedMultipleFailures.code === 'vendor_without_payload_code') {
+      expectTypeOf<typeof prefixedMultipleFailures>().not.toHaveProperty(
+        'payload',
+      );
+      expect(prefixedMultipleFailures).not.toHaveProperty('payload');
+    }
+
+    expect(immediatelyPrefixed).toMatchObject({
+      code: 'vendor_account_not_found',
+      message: 'Vendor account not found',
+    });
+
+    expectTypeOf<
+      (typeof immediatelyPrefixed)['code']
+    >().toEqualTypeOf<'vendor_account_not_found'>();
   });
 });

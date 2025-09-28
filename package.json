@@ -7,8 +7,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "npm run typecheck && tsup",
+    "dev": "tsc --noEmit --watch && tsup --watch",
+    "typecheck": "tsc --noEmit",
     "lint:fix": "eslint --fix .",
     "lint": "eslint .",
     "test": "vitest"
