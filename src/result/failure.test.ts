@@ -53,14 +53,6 @@ describe('FailureOf', () => {
       throw new Error('Should not happen');
     }
     /**
-     * Act
-     */
-    const [, rewrappedWith] = failure(withPayload);
-    type TP = typeof withPayload;
-
-    const [, rewrappedWithout] = failure(withoutPayload);
-    type TW = typeof withoutPayload;
-    /**
      * Assert
      */
     expectTypeOf<typeof withoutPayload>().not.toHaveProperty('payload');
